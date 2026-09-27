@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#05060a">
+  <title>NEXUS // 3D System</title>
+  <style>
+*{box-sizing:border-box}
+:root{--bg:#05060a;--line:rgba(120,220,255,.28);--text:#eafaff;--muted:#83a5b1;--accent:#64e8ff}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif}
+body{touch-action:none}
+#bg{position:fixed;inset:0;width:100%;height:100%}
+.hud{position:fixed;inset:0;pointer-events:none}
+.topbar{position:absolute;top:18px;left:22px;right:22px;display:flex;justify-content:space-between;font-size:11px;letter-spacing:3px;color:#a6d4de}
+.topbar span:last-child{opacity:.7}
+.corner{position:absolute;width:42px;height:42px;border-color:var(--line)}
+.c1{left:16px;top:16px;border-left:1px solid;border-top:1px solid}.c2{right:16px;top:16px;border-right:1px solid;border-top:1px solid}
+.c3{left:16px;bottom:16px;border-left:1px solid;border-bottom:1px solid}.c4{right:16px;bottom:16px;border-right:1px solid;border-bottom:1px solid}
+#deck{position:absolute;inset:0}
+.slide{position:absolute;inset:0;display:grid;place-items:center;padding:70px 9vw;opacity:0;transform:scale(1.08) translateZ(0);filter:blur(6px);transition:opacity .7s,transform .9s,filter .7s;pointer-events:none}
+.slide.active{opacity:1;transform:scale(1);filter:blur(0);pointer-events:auto}
+.eyebrow{position:absolute;top:62px;left:9vw;color:#75d4e6;font-size:10px;letter-spacing:4px}
+.hero{text-align:center;max-width:900px}.hero h1{font-size:clamp(55px,9vw,130px);line-height:.84;margin:12px 0;letter-spacing:-5px;text-shadow:0 0 40px rgba(100,232,255,.16)}
+.hero h1 span,h2 span{color:var(--accent)}
+p{color:var(--muted);font-size:16px;max-width:600px;line-height:1.6}
+button{border:1px solid rgba(100,232,255,.55);background:rgba(7,19,25,.6);color:var(--text);padding:14px 20px;font-weight:700;letter-spacing:2px;cursor:pointer;pointer-events:auto;backdrop-filter:blur(12px);transition:.25s}
+button:hover{transform:translateY(-2px);box-shadow:0 0 30px rgba(100,232,255,.18)}
+.boot{position:absolute;bottom:58px;font:10px monospace;color:#638690;letter-spacing:2px}.boot b,.terminal b{color:#89ffd9}
+.mini-orb,.orb,.globe,.brain,.lock{filter:drop-shadow(0 0 25px rgba(100,232,255,.25))}
+.mini-orb{width:90px;height:90px;margin:auto;border:1px solid var(--accent);border-radius:50%;box-shadow:0 0 35px rgba(100,232,255,.25),inset 0 0 35px rgba(100,232,255,.12);animation:pulse 2.6s ease-in-out infinite}
+.scene{position:absolute;left:12vw;top:50%;transform:translateY(-50%);width:45vw;height:60vh;display:grid;place-items:center}
+.orb{position:relative;width:min(36vw,370px);height:min(36vw,370px);border-radius:50%;display:grid;place-items:center;perspective:1000px}
+.core{width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,#eaffff 0 4%,#64e8ff 15%,#163643 50%,transparent 70%);box-shadow:0 0 80px #64e8ff;animation:pulse 1.7s infinite}
+.ring{position:absolute;border:1px solid rgba(100,232,255,.65);border-radius:50%}.r1{inset:0;transform:rotateX(68deg);animation:spin 5s linear infinite}.r2{inset:10%;transform:rotateY(68deg) rotateX(18deg);animation:spinReverse 7s linear infinite}.r3{inset:-9%;transform:rotateX(70deg) rotateY(14deg);animation:spin 11s linear infinite}
+.textpanel{position:absolute;right:9vw;top:50%;transform:translateY(-50%);width:min(40vw,520px)}.textpanel.right{right:7vw}.textpanel.center{position:relative;right:auto;top:auto;transform:none;text-align:center}
+h2{font-size:clamp(30px,5vw,64px);margin:0 0 14px;letter-spacing:-2px}
+.readouts{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}.readouts span,.metric{border:1px solid var(--line);padding:10px 12px;font-size:10px;letter-spacing:2px;color:var(--muted)}.readouts b,.metric b{color:var(--text)}
+.globe-wrap{position:absolute;left:13vw;top:50%;transform:translateY(-50%);width:42vw;height:65vh;display:grid;place-items:center}
+.globe{position:relative;width:min(36vw,380px);height:min(36vw,380px);border-radius:50%;border:1px solid rgba(100,232,255,.7);box-shadow:inset 0 0 60px rgba(100,232,255,.08),0 0 60px rgba(100,232,255,.08);background:radial-gradient(circle,rgba(42,111,130,.12),transparent 65%)}
+.globe:before,.globe:after,.longitude,.latitude{content:"";position:absolute;inset:8%;border:1px solid rgba(100,232,255,.3);border-radius:50%}.globe:before{transform:scaleX(.33)}.globe:after{transform:scaleX(.67)}.longitude{transform:rotate(90deg) scaleY(.33)}.latitude{transform:rotate(90deg) scaleY(.67)}
+.globe i{position:absolute;width:7px;height:7px;border-radius:50%;background:#aaf8ff;box-shadow:0 0 12px #64e8ff;animation:blink 1.8s infinite}.globe i:nth-of-type(1){left:27%;top:27%}.globe i:nth-of-type(2){left:62%;top:19%}.globe i:nth-of-type(3){left:72%;top:48%}.globe i:nth-of-type(4){left:45%;top:67%}.globe i:nth-of-type(5){left:20%;top:54%}.globe i:nth-of-type(6){left:55%;top:40%}.globe i:nth-of-type(7){left:38%;top:18%}.globe i:nth-of-type(8){left:74%;top:70%}
+.metric{display:flex;justify-content:space-between;margin-top:10px}
+.brain{width:min(32vw,320px);height:min(32vw,320px);border-radius:50%;display:grid;place-items:center;font-size:62px;letter-spacing:8px;background:radial-gradient(circle,rgba(100,232,255,.2),transparent 52%);border:1px solid rgba(100,232,255,.35);position:absolute;left:12vw;top:50%;transform:translateY(-50%);animation:pulse 3s infinite}
+.neuron{position:absolute;width:9px;height:9px;border-radius:50%;background:#b8fbff;box-shadow:0 0 18px #64e8ff}.n1{left:20%;top:25%}.n2{right:18%;top:34%}.n3{left:34%;bottom:20%}.n4{right:28%;bottom:24%}
+.bars{margin-top:24px}.bars div{display:grid;grid-template-columns:100px 1fr 40px;gap:10px;align-items:center;margin:14px 0;font-size:9px;letter-spacing:2px;color:var(--muted)}.bars em{height:5px;background:linear-gradient(90deg,transparent,#64e8ff);display:block;position:relative}.bars em:after{content:"";position:absolute;inset:0;width:var(--w);background:#64e8ff;box-shadow:0 0 14px #64e8ff}.bars b{color:var(--text)}
+.lock{font-size:140px;position:absolute;top:28%;left:16vw;color:#bafcff;text-shadow:0 0 40px #64e8ff;animation:float 3s ease-in-out infinite}
+.terminal{margin:25px auto 0;border:1px solid var(--line);padding:20px;max-width:420px;text-align:left;font:12px/2.1 monospace;color:#78a0ab;background:rgba(0,10,15,.35)}
+.city{position:absolute;inset:auto 0 0;height:48vh;display:flex;gap:10px;align-items:flex-end;justify-content:center;perspective:800px;transform:perspective(800px) rotateX(12deg)}
+.city span{display:block;width:11vw;max-width:120px;background:linear-gradient(#0e252d,#061017);border:1px solid rgba(100,232,255,.25);box-shadow:inset 0 0 20px rgba(100,232,255,.06);position:relative}.city span:nth-child(1){height:24vh}.city span:nth-child(2){height:35vh}.city span:nth-child(3){height:44vh}.city span:nth-child(4){height:30vh}.city span:nth-child(5){height:39vh}.city span:after{content:"";position:absolute;inset:15px;background:repeating-linear-gradient(to bottom,rgba(100,232,255,.35) 0 2px,transparent 2px 14px)}
+.horizon{position:absolute;left:0;right:0;bottom:0;height:2px;background:#64e8ff;box-shadow:0 0 30px #64e8ff}
+.final{text-align:center;position:relative;z-index:2}.final h2{font-size:clamp(46px,8vw,100px)}
+.nav{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;pointer-events:auto}.nav button{width:46px;height:40px;padding:0}.nav #dots{display:flex;gap:7px;padding:0 8px}.dot{width:6px;height:6px;border-radius:50%;background:#31515a;transition:.3s}.dot.active{background:#64e8ff;box-shadow:0 0 12px #64e8ff;transform:scale(1.6)}
+.hint{position:absolute;right:22px;bottom:22px;font:9px monospace;letter-spacing:2px;color:#54737b}
+@keyframes spin{to{transform:rotateX(68deg) rotateZ(360deg)}}@keyframes spinReverse{to{transform:rotateY(68deg) rotateX(18deg) rotateZ(-360deg)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}@keyframes blink{50%{opacity:.35;transform:scale(.7)}}@keyframes float{50%{transform:translateY(-12px)}}
+@media(max-width:800px){.slide{padding:70px 7vw}.eyebrow{left:7vw}.scene,.globe-wrap,.brain,.lock{position:absolute;left:50%;transform:translate(-50%,-50%);top:38%;width:70vw}.orb,.globe{width:52vw;height:52vw}.textpanel{right:7vw;left:7vw;width:auto;top:66%;transform:none;text-align:center}.textpanel p{margin-left:auto;margin-right:auto}.readouts,.metric{justify-content:center}.brain{top:35%;width:52vw;height:52vw}.lock{top:32%;font-size:110px}.hint{display:none}.hero h1{letter-spacing:-3px}}
+
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+
+<div class="hud">
+  <div class="topbar">
+    <span>NEXUS // CORE SYSTEM</span>
+    <span id="clock">00:00:00</span>
+  </div>
+
+  <div class="corner c1"></div><div class="corner c2"></div>
+  <div class="corner c3"></div><div class="corner c4"></div>
+
+  <main id="deck">
+    <section class="slide active">
+      <div class="eyebrow">SYSTEM BOOT // 001</div>
+      <div class="hero">
+        <div class="mini-orb"></div>
+        <h1>THE FUTURE<br><span>IS NOW</span></h1>
+        <p>Experiência de apresentação 3D interativa.</p>
+        <button data-action="next">INITIALIZE →</button>
+      </div>
+      <div class="boot">SYSTEM <b>ONLINE</b> · CORE 99.8% · LINK STABLE</div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">CORE // 002</div>
+      <div class="scene">
+        <div class="orb"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="core"></div></div>
+      </div>
+      <div class="textpanel">
+        <h2>QUANTUM CORE</h2>
+        <p>Um núcleo visual com camadas, energia e dados em movimento.</p>
+        <div class="readouts"><span>ENERGY <b>98.7%</b></span><span>LOAD <b>41.2%</b></span><span>SYNC <b>99.9%</b></span></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">NETWORK // 003</div>
+      <div class="globe-wrap">
+        <div class="globe">
+          <div class="longitude"></div><div class="latitude"></div>
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </div>
+      </div>
+      <div class="textpanel right">
+        <h2>GLOBAL NETWORK</h2>
+        <p>Pontos, rotas e pacotes de dados formando uma rede planetária.</p>
+        <div class="metric"><span>ACTIVE NODES</span><b>8,492,103</b></div>
+        <div class="metric"><span>DATA FLOW</span><b>1.42 TB/s</b></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">AI // 004</div>
+      <div class="brain">AI<div class="neuron n1"></div><div class="neuron n2"></div><div class="neuron n3"></div><div class="neuron n4"></div></div>
+      <div class="textpanel">
+        <h2>NEURAL INTELLIGENCE</h2>
+        <div class="bars">
+          <div><span>NEURAL CORE</span><em style="--w:98%"></em><b>98%</b></div>
+          <div><span>MEMORY</span><em style="--w:87%"></em><b>87%</b></div>
+          <div><span>ANALYSIS</span><em style="--w:94%"></em><b>94%</b></div>
+          <div><span>NETWORK</span><em style="--w:99%"></em><b>99%</b></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">SECURITY // 005</div>
+      <div class="lock">◈</div>
+      <div class="textpanel center">
+        <h2>SECURE PROTOCOL</h2>
+        <p>Camadas de proteção simuladas em uma interface de sistema.</p>
+        <div class="terminal">
+          <div>&gt; AUTHENTICATING...</div>
+          <div>&gt; ENCRYPTION <b>ACTIVE</b></div>
+          <div>&gt; THREAT LEVEL <b>0.02%</b></div>
+          <div>&gt; ACCESS <b>GRANTED</b></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="eyebrow">FUTURE // 006</div>
+      <div class="city">
+        <span></span><span></span><span></span><span></span><span></span>
+        <div class="horizon"></div>
+      </div>
+      <div class="final">
+        <div class="eyebrow">MISSION COMPLETE</div>
+        <h2>WELCOME TO<br><span>THE FUTURE.</span></h2>
+        <button data-action="restart">RESTART SYSTEM ↻</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="nav">
+    <button id="prev">←</button>
+    <div id="dots"></div>
+    <button id="next">→</button>
+  </div>
+  <div class="hint">← → / SWIPE / ESC FULLSCREEN</div>
+</div>
+
+<script>
+const slides=[...document.querySelectorAll(".slide")];
+const dots=document.getElementById("dots");
+let current=0;
+slides.forEach((_,i)=>{const d=document.createElement("i");d.className="dot"+(i===0?" active":"");d.onclick=()=>go(i);dots.appendChild(d)});
+function go(i){current=(i+slides.length)%slides.length;slides.forEach((s,n)=>s.classList.toggle("active",n===current));[...dots.children].forEach((d,n)=>d.classList.toggle("active",n===current))}
+function next(){go(current+1)}function prev(){go(current-1)}
+document.getElementById("next").onclick=next;document.getElementById("prev").onclick=prev;
+document.querySelectorAll('[data-action="next"]').forEach(b=>b.onclick=next);
+document.querySelectorAll('[data-action="restart"]').forEach(b=>b.onclick=()=>go(0));
+addEventListener("keydown",e=>{if(e.key==="ArrowRight"||e.key===" "){e.preventDefault();next()} if(e.key==="ArrowLeft"){prev()} if(e.key==="Escape"){document.documentElement.requestFullscreen?.().catch(()=>{})}});
+let sx=0;addEventListener("touchstart",e=>sx=e.touches[0].clientX,{passive:true});
+addEventListener("touchend",e=>{const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>45)(dx<0?next:prev)()},{passive:true});
+
+const clock=document.getElementById("clock");
+setInterval(()=>clock.textContent=new Date().toLocaleTimeString("pt-BR",{hour12:false}),1000);
+
+const canvas=document.getElementById("bg"),ctx=canvas.getContext("2d");
+let W,H,pts=[];
+function resize(){W=canvas.width=innerWidth*devicePixelRatio;H=canvas.height=innerHeight*devicePixelRatio;canvas.style.width=innerWidth+"px";canvas.style.height=innerHeight+"px";pts=Array.from({length:120},()=>({x:Math.random()*W,y:Math.random()*H,z:Math.random()*1.4+.2,v:(Math.random()-.5)*.22}))}
+function draw(){
+ ctx.clearRect(0,0,W,H);
+ for(const p of pts){p.y+=p.v*p.z;if(p.y<0)p.y=H;if(p.y>H)p.y=0;const r=.7*p.z;ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fillStyle=`rgba(130,220,240,${.15+.5*p.z})`;ctx.fill()}
+ requestAnimationFrame(draw)
+}
+addEventListener("resize",resize);resize();draw();
+
+let t=0;
+setInterval(()=>{t++; document.documentElement.style.setProperty("--pulse",Math.sin(t/8));},125);
+
+</script>
+</body>
+</html>
